@@ -1,0 +1,295 @@
+@use '@angular/material' as mat;
+
+// ── Outdoor High-Contrast Dark Theme ──────────────────────────────────────────
+$theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: mat.$orange-palette,
+    tertiary: mat.$cyan-palette,
+  ),
+  typography: (
+    brand-family: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+    plain-family: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+  ),
+  density: (scale: 0),
+));
+
+html {
+  @include mat.all-component-themes($theme);
+  @include mat.all-component-bases($theme);
+}
+
+// ── Reset & Base ──────────────────────────────────────────────────────────────
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #0d1117;
+  color: #f0f6fc;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: clamp(15px, 1.4vw, 20px);
+}
+
+// ── Material overrides for outdoor visibility ─────────────────────────────────
+
+// Override system-level color tokens for maximum contrast
+html {
+  --mat-sys-background: #0d1117;
+  --mat-sys-surface: #161b22;
+  --mat-sys-surface-container: #21262d;
+  --mat-sys-surface-container-high: #30363d;
+  --mat-sys-on-background: #f0f6fc;
+  --mat-sys-on-surface: #f0f6fc;
+  --mat-sys-on-surface-variant: #c9d1d9;
+  --mat-sys-outline: #484f58;
+  --mat-sys-outline-variant: #30363d;
+}
+
+// Cards – darker surface for better contrast
+.mat-mdc-card {
+  background-color: #161b22 !important;
+  color: #f0f6fc !important;
+  border: 1px solid #30363d;
+}
+.mat-mdc-card-title { color: #f0f6fc !important; }
+.mat-mdc-card-subtitle { color: #c9d1d9 !important; }
+
+// Toolbar
+mat-toolbar.outdoor-toolbar {
+  background-color: #0d1117 !important;
+  color: #f0f6fc !important;
+  border-bottom: 2px solid #f59e0b;
+  min-height: 64px;
+}
+
+// Form fields
+.mat-mdc-form-field-subscript-wrapper { display: none; }
+.mat-mdc-text-field-wrapper { background-color: #21262d !important; }
+.mat-mdc-form-field label { color: #c9d1d9 !important; }
+.mat-mdc-input-element { color: #f0f6fc !important; font-size: 1rem; }
+.mat-mdc-select-value { color: #f0f6fc !important; }
+.mat-mdc-option { background-color: #161b22 !important; color: #f0f6fc !important; }
+.mat-mdc-option:hover { background-color: #21262d !important; }
+
+// Buttons – make them large and visible
+.mat-mdc-raised-button, .mat-mdc-flat-button {
+  min-height: 48px !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em;
+}
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-flat-button.mat-primary {
+  background-color: #f59e0b !important;
+  color: #0d1117 !important;
+}
+.mat-mdc-raised-button.mat-warn,
+.mat-mdc-flat-button.mat-warn {
+  background-color: #ef4444 !important;
+  color: #fff !important;
+}
+.mat-mdc-outlined-button {
+  min-height: 44px !important;
+  font-size: 0.95rem !important;
+  border-color: #484f58 !important;
+  color: #c9d1d9 !important;
+}
+
+// Navigation links in toolbar
+a.nav-link {
+  color: #c9d1d9;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+  &:hover { color: #f59e0b; background: #21262d; }
+  &.active { color: #f59e0b; }
+}
+
+// Tables
+table { color: #f0f6fc !important; }
+th { color: #c9d1d9 !important; border-bottom-color: #30363d !important; }
+td { border-bottom-color: #21262d !important; }
+
+// Inputs & selects in general (fallback)
+input[type="text"], input[type="number"], input[type="datetime-local"], select {
+  background: #21262d;
+  color: #f0f6fc;
+  border: 1px solid #484f58;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+}
+input::placeholder { color: #8b949e; }
+select option { background: #161b22; color: #f0f6fc; }
+
+// Page layout – full-width, no max-width constraint
+.page-layout {
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+// Section cards
+.section-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+}
+.section-card h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 700;
+  color: #f0f6fc;
+}
+.section-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  color: #c9d1d9;
+}
+
+// Team badge chips
+.team-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #21262d;
+  border: 1px solid #484f58;
+  border-radius: 20px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f0f6fc;
+}
+.team-chip .remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #8b949e;
+  font-size: 0.8rem;
+  padding: 0;
+  line-height: 1;
+  &:hover { color: #ef4444; }
+}
+
+// Outdoor action button (generic)
+.btn-primary {
+  padding: 0.55rem 1.25rem;
+  background: #f59e0b;
+  color: #0d1117;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  &:hover { background: #d97706; }
+  &:disabled { opacity: 0.45; cursor: default; }
+}
+.btn-danger {
+  padding: 0.45rem 1rem;
+  background: #7f1d1d;
+  color: #fca5a5;
+  border: 1px solid #991b1b;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  &:hover { background: #991b1b; color: #fff; }
+}
+.btn-secondary {
+  padding: 0.45rem 1rem;
+  background: #21262d;
+  color: #c9d1d9;
+  border: 1px solid #484f58;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  &:hover { background: #30363d; }
+}
+.btn-success {
+  padding: 0.45rem 1rem;
+  background: #166534;
+  color: #86efac;
+  border: 1px solid #15803d;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  &:hover { background: #15803d; color: #fff; }
+}
+
+.empty-hint {
+  color: #8b949e;
+  font-size: 1rem;
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+// Flex row helper
+.flex-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+// Responsive form grid
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+.form-field-group {
+  display: grid;
+  gap: 0.35rem;
+  label { color: #c9d1d9; font-size: 0.9rem; font-weight: 600; }
+  input, select { width: 100%; }
+}
+
+// List items
+.item-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.item-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-size: 1rem;
+  span { flex: 1; font-weight: 600; }
+}
+
+// Score input box
+.score-box {
+  width: 56px;
+  text-align: center;
+  padding: 0.35rem 0.25rem;
+  border: 2px solid #484f58;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  background: #21262d;
+  color: #f0f6fc;
+}
+.score-box:focus { border-color: #f59e0b; outline: none; }
