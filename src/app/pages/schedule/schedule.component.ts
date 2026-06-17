@@ -1,84 +1,89 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { MatToolbar } from '@angular/material/toolbar';
 import { TournamentService } from '../../services/tournament.service';
 
 @Component({
   selector: 'app-schedule',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, MatToolbar],
   template: `
-    <main class="page">
-      <header class="header">
-        <h1>Tournament Schedule</h1>
-        <nav class="nav">
-          <a routerLink="/config">Config</a>
-          <a routerLink="/groups">Gruppenphase</a>
-          <a routerLink="/bracket">Turnierplan</a>
-          <a routerLink="/live">Live Display</a>
-        </nav>
-      </header>
+    <mat-toolbar class="outdoor-toolbar">
+      <span class="toolbar-title">📅 Tournament Schedule</span>
+      <span class="toolbar-spacer"></span>
+      <nav class="flex-row">
+        <a routerLink="/config" class="nav-link">Konfiguration</a>
+        <a routerLink="/groups" class="nav-link">Gruppen</a>
+        <a routerLink="/bracket" class="nav-link">Turnierplan</a>
+        <a routerLink="/live" class="nav-link">Live Display</a>
+      </nav>
+    </mat-toolbar>
 
+    <div class="page-layout">
       @if (matches().length === 0) {
-        <section class="empty">
-          <p>Es sind noch keine Matches geplant.</p>
+        <section class="section-card">
+          <p class="empty-hint">Es sind noch keine Matches geplant.</p>
         </section>
       } @else {
-        <section class="bracket">
+        <div class="match-grid">
           @for (match of matches(); track match.id; let index = $index) {
             <article class="match-card">
-              <p class="match-title">Match {{ index + 1 }}</p>
-              <p class="teams">{{ match.homeTeamName }} vs {{ match.awayTeamName }}</p>
-              <p class="time">{{ match.startTime | date: 'fullDate' }} – {{ match.startTime | date: 'shortTime' }}</p>
+              <div class="match-index">Match {{ index + 1 }}</div>
+              <div class="match-teams">{{ match.homeTeamName }} vs {{ match.awayTeamName }}</div>
+              <div class="match-time">
+                {{ match.startTime | date: 'fullDate' }}
+                <span class="time-sep">–</span>
+                {{ match.startTime | date: 'shortTime' }}
+              </div>
             </article>
           }
-        </section>
+        </div>
       }
-    </main>
+    </div>
   `,
   styles: `
-    .page {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 1rem;
+    :host { display: block; }
+    .toolbar-title {
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      font-weight: 800;
+      color: #f59e0b;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .toolbar-spacer { flex: 1; }
+    .match-grid {
       display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1rem;
     }
-    .header,
-    .nav {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-    .bracket {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 0.75rem;
-    }
     .match-card {
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
-      padding: 0.9rem;
+      background: #161b22;
+      border: 2px solid #30363d;
+      border-radius: 12px;
+      padding: 1.25rem;
       display: grid;
-      gap: 0.35rem;
+      gap: 0.5rem;
+      transition: border-color 0.2s;
+      &:hover { border-color: #f59e0b; }
     }
-    .match-title {
-      margin: 0;
-      color: #4b5563;
-      font-size: 0.875rem;
-    }
-    .teams {
-      margin: 0;
+    .match-index {
+      font-size: 0.8rem;
       font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #f59e0b;
     }
-    .time {
-      margin: 0;
-      color: #111827;
+    .match-teams {
+      font-weight: 800;
+      font-size: clamp(1rem, 1.8vw, 1.25rem);
+      color: #f0f6fc;
     }
-    .empty {
-      color: #6b7280;
+    .match-time {
+      color: #c9d1d9;
+      font-size: 0.9rem;
     }
+    .time-sep { margin: 0 0.3rem; color: #484f58; }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
