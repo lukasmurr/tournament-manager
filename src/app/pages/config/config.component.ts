@@ -14,6 +14,8 @@ import { TournamentService } from '../../services/tournament.service';
         <h1>Tournament Konfiguration</h1>
         <nav class="nav">
           <a routerLink="/schedule">Schedule</a>
+          <a routerLink="/groups">Gruppenphase</a>
+          <a routerLink="/bracket">Turnierplan</a>
           <a routerLink="/live">Live Display</a>
         </nav>
       </header>

@@ -17,6 +17,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/schedule/schedule.component').then((m) => m.ScheduleComponent),
   },
   {
+    path: 'groups',
+    title: 'Gruppenphase',
+    loadComponent: () => import('./pages/groups/groups.component').then((m) => m.GroupsComponent),
+  },
+  {
+    path: 'bracket',
+    title: 'Turnierplan',
+    loadComponent: () => import('./pages/bracket/bracket.component').then((m) => m.BracketComponent),
+  },
+  {
     path: 'live',
     title: 'Live Display',
     loadComponent: () => import('./pages/live-display/live-display.component').then((m) => m.LiveDisplayComponent),

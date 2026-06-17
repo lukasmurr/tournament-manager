@@ -13,6 +13,8 @@ import { TournamentService } from '../../services/tournament.service';
         <h1>Tournament Schedule</h1>
         <nav class="nav">
           <a routerLink="/config">Config</a>
+          <a routerLink="/groups">Gruppenphase</a>
+          <a routerLink="/bracket">Turnierplan</a>
           <a routerLink="/live">Live Display</a>
         </nav>
       </header>
