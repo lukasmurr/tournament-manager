@@ -15,6 +15,8 @@ export interface ScheduledMatch {
 }
 
 export interface LiveMatch {
+  matchId: string | null;
+  matchType: 'group' | 'knockout' | null;
   homeTeamId: string | null;
   awayTeamId: string | null;
   homeScore: number;
@@ -198,6 +200,46 @@ export class TournamentService {
       ...state,
       schedule: state.schedule.filter((match) => match.id !== matchId),
     }));
+    this.persistState(this.stateSignal());
+  }
+
+  setupLiveMatch(matchId: string, matchType: 'group' | 'knockout'): void {
+    this.clearTimerSubscription();
+
+    this.stateSignal.update((state) => {
+      let homeTeamId = null;
+      let awayTeamId = null;
+      let homeScore = 0;
+      let awayScore = 0;
+
+      if (matchType === 'group') {
+        const m = state.groupMatches.find(x => x.id === matchId);
+        if (m) {
+          homeTeamId = m.homeTeamId;
+          awayTeamId = m.awayTeamId;
+          homeScore = m.homeScore || 0;
+          awayScore = m.awayScore || 0;
+        }
+      } else if (matchType === 'knockout') {
+        const m = state.knockoutMatches.find(x => x.id === matchId);
+        if (m) {
+          homeTeamId = m.homeTeamId;
+          awayTeamId = m.awayTeamId;
+          homeScore = m.homeScore || 0;
+          awayScore = m.awayScore || 0;
+        }
+      }
+
+      return {
+        ...state,
+        liveMatch: { matchId, matchType, homeTeamId, awayTeamId, homeScore, awayScore },
+        timer: {
+          ...state.timer,
+          remainingSeconds: state.timer.matchDurationMinutes * 60,
+          isRunning: false
+        }
+      };
+    });
     this.persistState(this.stateSignal());
   }
 
@@ -535,6 +577,17 @@ export class TournamentService {
     this.persistState(this.stateSignal());
   }
 
+  finishLiveMatch(): void {
+    const live = this.stateSignal().liveMatch;
+    if (live.matchId && live.matchType) {
+      if (live.matchType === 'group') {
+        this.updateGroupMatchResult(live.matchId, live.homeScore, live.awayScore, true);
+      } else if (live.matchType === 'knockout') {
+        this.updateKnockoutResult(live.matchId, live.homeScore, live.awayScore, true);
+      }
+    }
+  }
+
   private tickTimer(): void {
     let hasExpired = false;
 
@@ -551,6 +604,11 @@ export class TournamentService {
         },
       };
     });
+    
+    if (hasExpired) {
+      this.finishLiveMatch();
+    }
+
     this.persistState(this.stateSignal());
 
     if (hasExpired) {
@@ -598,6 +656,8 @@ export class TournamentService {
       teams: [],
       schedule: [],
       liveMatch: {
+        matchId: null,
+        matchType: null,
         homeTeamId: null,
         awayTeamId: null,
         homeScore: 0,
