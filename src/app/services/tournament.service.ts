@@ -733,6 +733,8 @@ export class TournamentService {
       teams,
       schedule,
       liveMatch: {
+        matchId: typeof liveMatch?.matchId === 'string' ? liveMatch.matchId : null,
+        matchType: liveMatch?.matchType === 'group' || liveMatch?.matchType === 'knockout' ? liveMatch.matchType : null,
         homeTeamId: typeof homeTeamId === 'string' && validTeamIds.has(homeTeamId) ? homeTeamId : null,
         awayTeamId: typeof awayTeamId === 'string' && validTeamIds.has(awayTeamId) ? awayTeamId : null,
         homeScore: Math.max(0, Math.floor(liveMatch?.homeScore ?? 0)),

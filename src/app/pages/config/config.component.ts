@@ -1,5 +1,4 @@
 ﻿import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatToolbar } from '@angular/material/toolbar';
@@ -8,7 +7,7 @@ import { TournamentService, GROUP_COLORS, GroupMatch, KnockoutMatch } from '../.
 @Component({
   selector: 'app-config',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, RouterLink, DatePipe, MatToolbar],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink, MatToolbar],
   template: `
     <mat-toolbar class="outdoor-toolbar">
       <span class="toolbar-title">🏆 Tournament Manager - Konfiguration</span>

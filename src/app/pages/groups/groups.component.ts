@@ -26,12 +26,13 @@ interface GroupViewModel {
     </mat-toolbar>
 
     <div class="page-layout">
-      <!-- Group Matches & Standings -->
-      @for (vm of groupViewModels(); track vm.group.id) {
-        <section class="section-card group-section" [style.border-color]="vm.group.color">
-          <div class="group-header" [style.background]="vm.group.color">
-            <h2>{{ vm.group.name }}</h2>
-          </div>
+      <div class="groups-grid">
+        <!-- Group Matches & Standings -->
+        @for (vm of groupViewModels(); track vm.group.id) {
+          <section class="section-card group-section" [style.border-color]="vm.group.color">
+            <div class="group-header" [style.background]="vm.group.color">
+              <h2>{{ vm.group.name }}</h2>
+            </div>
 
           <!-- Standings Table -->
           @if (vm.standings.length > 0) {
@@ -100,6 +101,7 @@ interface GroupViewModel {
           }
         </section>
       }
+      </div>
 
       @if (groups().length === 0) {
         <p class="empty-hint" style="text-align:center;padding:2rem">
@@ -117,6 +119,14 @@ interface GroupViewModel {
       letter-spacing: 0.04em;
       white-space: nowrap;
     }
+    
+    .groups-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+      align-items: start;
+    }
+
     .toolbar-spacer { flex: 1; }
     .grow-input { flex: 1; min-width: 200px; }
 
