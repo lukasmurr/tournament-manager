@@ -26,9 +26,9 @@ interface KnockoutMatchVM extends KnockoutMatch {
 
     <div class="page-layout">
 
-      @if (groups().length < 2) {
+      @if (groups().length === 0) {
         <section class="section-card info-card">
-          <p>⚠️ Mindestens 2 Gruppen werden benötigt für die K.O.-Runde.</p>
+          <p>⚠️ Mindestens 1 Gruppe wird benötigt für den Turnierplan.</p>
         </section>
       } @else {
 

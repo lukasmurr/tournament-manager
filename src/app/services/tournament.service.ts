@@ -381,25 +381,65 @@ export class TournamentService {
     this.persistState(this.stateSignal());
   }
 
+  private generateRoundRobin(teamsId: string[]): {home: string, away: string}[][] {
+    const teams = [...teamsId];
+    if (teams.length % 2 !== 0) {
+      teams.push('BYE');
+    }
+    const rounds: {home: string, away: string}[][] = [];
+    const n = teams.length;
+
+    for (let round = 0; round < n - 1; round++) {
+      const roundMatches: {home: string, away: string}[] = [];
+      for (let i = 0; i < n / 2; i++) {
+        const home = teams[i];
+        const away = teams[n - 1 - i];
+        if (home !== 'BYE' && away !== 'BYE') {
+          // Alternatively swap home/away to perfectly balance home/away games if needed
+          // But random is fine or just sticking to position is fine
+          roundMatches.push({ home, away });
+        }
+      }
+      rounds.push(roundMatches);
+
+      // Rotate: keep team[0] fixed, shift the rest
+      const last = teams.pop()!;
+      teams.splice(1, 0, last);
+    }
+    return rounds;
+  }
+
   generateGroupMatches(): void {
     const state = this.stateSignal();
     const newMatches: GroupMatch[] = [];
+
+    const groupRounds = new Map<string, {home: string, away: string}[][]>();
+    let maxRounds = 0;
 
     for (const group of state.groups) {
       const existing = state.groupMatches.filter((m) => m.groupId === group.id);
       if (existing.length > 0) continue; // already generated for this group
 
-      for (let i = 0; i < group.teamIds.length; i++) {
-        for (let j = i + 1; j < group.teamIds.length; j++) {
-          newMatches.push({
-            id: this.createId(),
-            groupId: group.id,
-            homeTeamId: group.teamIds[i],
-            awayTeamId: group.teamIds[j],
-            homeScore: null,
-            awayScore: null,
-            played: false,
-          });
+      const rounds = this.generateRoundRobin(group.teamIds);
+      groupRounds.set(group.id, rounds);
+      if (rounds.length > maxRounds) maxRounds = rounds.length;
+    }
+
+    for (let r = 0; r < maxRounds; r++) {
+      for (const group of state.groups) {
+        const rounds = groupRounds.get(group.id);
+        if (rounds && r < rounds.length) {
+          for (const m of rounds[r]) {
+            newMatches.push({
+              id: this.createId(),
+              groupId: group.id,
+              homeTeamId: m.home,
+              awayTeamId: m.away,
+              homeScore: null,
+              awayScore: null,
+              played: false,
+            });
+          }
         }
       }
     }
@@ -414,18 +454,30 @@ export class TournamentService {
     const state = this.stateSignal();
     const newMatches: GroupMatch[] = [];
 
+    const groupRounds = new Map<string, {home: string, away: string}[][]>();
+    let maxRounds = 0;
+
     for (const group of state.groups) {
-      for (let i = 0; i < group.teamIds.length; i++) {
-        for (let j = i + 1; j < group.teamIds.length; j++) {
-          newMatches.push({
-            id: this.createId(),
-            groupId: group.id,
-            homeTeamId: group.teamIds[i],
-            awayTeamId: group.teamIds[j],
-            homeScore: null,
-            awayScore: null,
-            played: false,
-          });
+      const rounds = this.generateRoundRobin(group.teamIds);
+      groupRounds.set(group.id, rounds);
+      if (rounds.length > maxRounds) maxRounds = rounds.length;
+    }
+
+    for (let r = 0; r < maxRounds; r++) {
+      for (const group of state.groups) {
+        const rounds = groupRounds.get(group.id);
+        if (rounds && r < rounds.length) {
+          for (const m of rounds[r]) {
+            newMatches.push({
+              id: this.createId(),
+              groupId: group.id,
+              homeTeamId: m.home,
+              awayTeamId: m.away,
+              homeScore: null,
+              awayScore: null,
+              played: false,
+            });
+          }
         }
       }
     }
@@ -488,63 +540,121 @@ export class TournamentService {
 
   generateKnockoutBracket(): void {
     const state = this.stateSignal();
-    if (state.groups.length < 2) return;
+    if (state.groups.length === 0) return;
 
-    const groupA = state.groups[0];
-    const groupB = state.groups[1];
-    const standingsA = this.computeGroupStandings(groupA.id);
-    const standingsB = this.computeGroupStandings(groupB.id);
+    let knockoutMatches: KnockoutMatch[] = [];
 
-    const a1 = standingsA[0]?.teamId ?? null;
-    const a2 = standingsA[1]?.teamId ?? null;
-    const b1 = standingsB[0]?.teamId ?? null;
-    const b2 = standingsB[1]?.teamId ?? null;
+    if (state.groups.length === 1) {
+      const group = state.groups[0];
+      const standings = this.computeGroupStandings(group.id);
 
-    const sf1Id = this.createId();
-    const sf2Id = this.createId();
-    const finalId = this.createId();
+      const t1 = standings[0]?.teamId ?? null;
+      const t2 = standings[1]?.teamId ?? null;
+      const t3 = standings[2]?.teamId ?? null;
+      const t4 = standings[3]?.teamId ?? null;
 
-    const knockoutMatches: KnockoutMatch[] = [
-      {
-        id: sf1Id,
-        label: 'Halbfinale 1',
-        round: 'semifinal',
-        position: 1,
-        homeSlotLabel: `1. ${groupA.name}`,
-        awaySlotLabel: `2. ${groupB.name}`,
-        homeTeamId: a1,
-        awayTeamId: b2,
-        homeScore: null,
-        awayScore: null,
-        played: false,
-      },
-      {
-        id: sf2Id,
-        label: 'Halbfinale 2',
-        round: 'semifinal',
-        position: 2,
-        homeSlotLabel: `1. ${groupB.name}`,
-        awaySlotLabel: `2. ${groupA.name}`,
-        homeTeamId: b1,
-        awayTeamId: a2,
-        homeScore: null,
-        awayScore: null,
-        played: false,
-      },
-      {
-        id: finalId,
-        label: 'Finale',
-        round: 'final',
-        position: 1,
-        homeSlotLabel: 'Sieger HF 1',
-        awaySlotLabel: 'Sieger HF 2',
-        homeTeamId: null,
-        awayTeamId: null,
-        homeScore: null,
-        awayScore: null,
-        played: false,
-      },
-    ];
+      const sf1Id = this.createId();
+      const sf2Id = this.createId();
+      const finalId = this.createId();
+
+      knockoutMatches = [
+        {
+          id: sf1Id,
+          label: 'Halbfinale 1',
+          round: 'semifinal',
+          position: 1,
+          homeSlotLabel: `1. ${group.name}`,
+          awaySlotLabel: `4. ${group.name}`,
+          homeTeamId: t1,
+          awayTeamId: t4,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+        },
+        {
+          id: sf2Id,
+          label: 'Halbfinale 2',
+          round: 'semifinal',
+          position: 2,
+          homeSlotLabel: `2. ${group.name}`,
+          awaySlotLabel: `3. ${group.name}`,
+          homeTeamId: t2,
+          awayTeamId: t3,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+        },
+        {
+          id: finalId,
+          label: 'Finale',
+          round: 'final',
+          position: 1,
+          homeSlotLabel: 'Sieger HF 1',
+          awaySlotLabel: 'Sieger HF 2',
+          homeTeamId: null,
+          awayTeamId: null,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+        },
+      ];
+    } else {
+      const groupA = state.groups[0];
+      const groupB = state.groups[1];
+      const standingsA = this.computeGroupStandings(groupA.id);
+      const standingsB = this.computeGroupStandings(groupB.id);
+
+      const a1 = standingsA[0]?.teamId ?? null;
+      const a2 = standingsA[1]?.teamId ?? null;
+      const b1 = standingsB[0]?.teamId ?? null;
+      const b2 = standingsB[1]?.teamId ?? null;
+
+      const sf1Id = this.createId();
+      const sf2Id = this.createId();
+      const finalId = this.createId();
+
+      knockoutMatches = [
+        {
+          id: sf1Id,
+          label: 'Halbfinale 1',
+          round: 'semifinal',
+          position: 1,
+          homeSlotLabel: `1. ${groupA.name}`,
+          awaySlotLabel: `2. ${groupB.name}`,
+          homeTeamId: a1,
+          awayTeamId: b2,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+        },
+        {
+          id: sf2Id,
+          label: 'Halbfinale 2',
+          round: 'semifinal',
+          position: 2,
+          homeSlotLabel: `1. ${groupB.name}`,
+          awaySlotLabel: `2. ${groupA.name}`,
+          homeTeamId: b1,
+          awayTeamId: a2,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+        },
+        {
+          id: finalId,
+          label: 'Finale',
+          round: 'final',
+          position: 1,
+          homeSlotLabel: 'Sieger HF 1',
+          awaySlotLabel: 'Sieger HF 2',
+          homeTeamId: null,
+          awayTeamId: null,
+          homeScore: null,
+          awayScore: null,
+          played: false,
+        },
+      ];
+    }
 
     this.stateSignal.update((s) => ({ ...s, knockoutMatches }));
     this.persistState(this.stateSignal());
