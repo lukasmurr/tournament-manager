@@ -93,6 +93,27 @@ export class TournamentService {
 
   private readonly stateSignal = signal<TournamentState>(this.restoreState());
 
+  constructor() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (event) => {
+        if (event.key === TOURNAMENT_STORAGE_KEY && event.newValue) {
+          try {
+            const parsed = JSON.parse(event.newValue) as Partial<TournamentState>;
+            const state = this.normalizeState(parsed);
+            this.stateSignal.set(state);
+            
+            // Note: We don't start the local interval here to prevent multiple tabs 
+            // from decreasing the timer simultaneously. The tab that initiated 
+            // startTimer() runs the interval and syncs via localStorage.
+            if (!state.timer.isRunning && this.timerSubscription) {
+              this.clearTimerSubscription();
+            }
+          } catch {}
+        }
+      });
+    }
+  }
+
   readonly state = this.stateSignal.asReadonly();
   readonly teams = computed(() => this.stateSignal().teams);
   readonly schedule = computed(() => this.stateSignal().schedule);
@@ -237,6 +258,11 @@ export class TournamentService {
     });
     this.persistState(this.stateSignal());
 
+    this.startLocalInterval();
+  }
+
+  private startLocalInterval(): void {
+    if (this.timerSubscription) return;
     this.timerSubscription = interval(1_000)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.tickTimer());

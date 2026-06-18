@@ -26,75 +26,6 @@ interface GroupViewModel {
     </mat-toolbar>
 
     <div class="page-layout">
-
-      <!-- Create Group -->
-      <section class="section-card">
-        <h2>Gruppe erstellen</h2>
-        <div class="flex-row">
-          <input type="text" placeholder="Gruppenname (z.B. Gruppe A)" [(ngModel)]="newGroupName" class="grow-input" />
-          <div class="color-picker">
-            @for (color of groupColors; track color) {
-              <button
-                type="button"
-                class="color-swatch"
-                [style.background]="color"
-                [class.selected]="selectedColor === color"
-                (click)="selectedColor = color"
-              ></button>
-            }
-          </div>
-          <button type="button" class="btn-primary" (click)="addGroup()" [disabled]="!newGroupName.trim()">
-            Gruppe hinzufügen
-          </button>
-        </div>
-      </section>
-
-      <!-- Assign Teams to Groups -->
-      @if (groups().length > 0) {
-        <section class="section-card">
-          <h2>Teams zuweisen</h2>
-          @if (unassignedTeams().length === 0 && teams().length === 0) {
-            <p class="empty-hint">Bitte zuerst Teams in der Konfiguration anlegen.</p>
-          } @else {
-            <div class="assignment-grid">
-              @for (group of groups(); track group.id) {
-                <div class="group-box" [style.--group-color]="group.color">
-                  <h3 [style.color]="group.color">{{ group.name }}</h3>
-                  <div class="group-teams">
-                    @for (teamId of group.teamIds; track teamId) {
-                      <div class="team-chip" [style.border-color]="group.color">
-                        <span>{{ teamNameById().get(teamId) }}</span>
-                        <button type="button" class="remove-btn" (click)="removeTeamFromGroup(group.id, teamId)">✕</button>
-                      </div>
-                    }
-                    @if (group.teamIds.length === 0) {
-                      <span class="no-teams">Noch keine Teams</span>
-                    }
-                  </div>
-                  <select (change)="onAddTeam(group.id, $event)">
-                    <option value="">Team hinzufügen…</option>
-                    @for (team of availableTeamsForGroup(group.id); track team.id) {
-                      <option [value]="team.id">{{ team.name }}</option>
-                    }
-                  </select>
-                  <button type="button" class="btn-danger sm-btn" (click)="removeGroup(group.id)">Gruppe löschen</button>
-                </div>
-              }
-              @if (unassignedTeams().length > 0) {
-                <div class="group-box unassigned">
-                  <h3 style="color:#8b949e">Nicht zugewiesen</h3>
-                  <div class="group-teams">
-                    @for (team of unassignedTeams(); track team.id) {
-                      <div class="team-chip unassigned-chip">{{ team.name }}</div>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          }
-        </section>
-      }
-
       <!-- Group Matches & Standings -->
       @for (vm of groupViewModels(); track vm.group.id) {
         <section class="section-card group-section" [style.border-color]="vm.group.color">
@@ -142,14 +73,7 @@ interface GroupViewModel {
           <!-- Group Matches -->
           @if (vm.group.teamIds.length >= 2) {
             <div class="matches-section">
-              <div class="flex-row">
-                <h3>Spiele</h3>
-                @if (vm.matches.length === 0) {
-                  <button type="button" class="btn-primary sm-btn" (click)="generateMatches()">Spielplan generieren</button>
-                } @else {
-                  <button type="button" class="btn-secondary sm-btn" (click)="regenerateMatches()">Neu generieren</button>
-                }
-              </div>
+              <h3>Spiele</h3>
               @if (vm.matches.length === 0) {
                 <p class="empty-hint">Noch keine Spiele generiert.</p>
               } @else {
@@ -158,27 +82,14 @@ interface GroupViewModel {
                     <div class="match-row" [class.played]="match.played">
                       <span class="m-team home">{{ match.homeTeamName }}</span>
                       <div class="score-pair">
-                        <input
-                          type="number" min="0" class="score-box"
-                          [value]="match.homeScore ?? ''"
-                          (change)="onScoreChange(match.id, 'home', $event)"
-                          placeholder="–"
-                        />
+                        <span class="score-display">{{ match.homeScore ?? '-' }}</span>
                         <span class="colon">:</span>
-                        <input
-                          type="number" min="0" class="score-box"
-                          [value]="match.awayScore ?? ''"
-                          (change)="onScoreChange(match.id, 'away', $event)"
-                          placeholder="–"
-                        />
+                        <span class="score-display">{{ match.awayScore ?? '-' }}</span>
                       </div>
                       <span class="m-team away">{{ match.awayTeamName }}</span>
-                      <button
-                        type="button"
-                        class="played-btn"
-                        [class.active]="match.played"
-                        (click)="togglePlayed(match)"
-                      >{{ match.played ? '✓ Gespielt' : 'Gespielt?' }}</button>
+                      @if (match.played) {
+                        <span class="played-badge">✓ Gespielt</span>
+                      }
                     </div>
                   }
                 </div>
@@ -192,7 +103,7 @@ interface GroupViewModel {
 
       @if (groups().length === 0) {
         <p class="empty-hint" style="text-align:center;padding:2rem">
-          Noch keine Gruppen erstellt. Füge oben eine Gruppe hinzu.
+          Noch keine Gruppen konfiguriert. Bitte in der Konfiguration anlegen.
         </p>
       }
     </div>
@@ -307,23 +218,11 @@ interface GroupViewModel {
 export class GroupsComponent {
   private readonly service = inject(TournamentService);
 
-  readonly groupColors = GROUP_COLORS;
   readonly teams = this.service.teams;
   readonly groups = this.service.groups;
   readonly groupMatches = this.service.groupMatches;
 
-  newGroupName = '';
-  selectedColor = GROUP_COLORS[0];
-
   readonly teamNameById = computed(() => new Map(this.teams().map((t) => [t.id, t.name])));
-
-  readonly assignedTeamIds = computed(() => {
-    const ids = new Set<string>();
-    this.groups().forEach((g) => g.teamIds.forEach((id) => ids.add(id)));
-    return ids;
-  });
-
-  readonly unassignedTeams = computed(() => this.teams().filter((t) => !this.assignedTeamIds().has(t.id)));
 
   readonly groupViewModels = computed<GroupViewModel[]>(() =>
     this.groups().map((group) => {
@@ -338,58 +237,4 @@ export class GroupsComponent {
       return { group, standings, matches };
     }),
   );
-
-  availableTeamsForGroup(groupId: string): { id: string; name: string }[] {
-    const group = this.groups().find((g) => g.id === groupId);
-    const inGroup = new Set(group?.teamIds ?? []);
-    return this.teams().filter((t) => !inGroup.has(t.id));
-  }
-
-  addGroup(): void {
-    if (!this.newGroupName.trim()) return;
-    this.service.addGroup(this.newGroupName.trim(), this.selectedColor);
-    this.newGroupName = '';
-    const idx = this.groupColors.indexOf(this.selectedColor);
-    this.selectedColor = this.groupColors[(idx + 1) % this.groupColors.length];
-  }
-
-  removeGroup(groupId: string): void {
-    this.service.removeGroup(groupId);
-  }
-
-  onAddTeam(groupId: string, event: Event): void {
-    const teamId = (event.target as HTMLSelectElement).value;
-    if (!teamId) return;
-    this.service.addTeamToGroup(groupId, teamId);
-    (event.target as HTMLSelectElement).value = '';
-  }
-
-  removeTeamFromGroup(groupId: string, teamId: string): void {
-    this.service.removeTeamFromGroup(groupId, teamId);
-  }
-
-  generateMatches(): void {
-    this.service.generateGroupMatches();
-  }
-
-  regenerateMatches(): void {
-    this.service.regenerateGroupMatches();
-  }
-
-  onScoreChange(matchId: string, side: 'home' | 'away', event: Event): void {
-    const val = (event.target as HTMLInputElement).value;
-    const score = val === '' ? null : Math.max(0, parseInt(val, 10));
-    const match = this.groupMatches().find((m) => m.id === matchId);
-    if (!match) return;
-
-    if (side === 'home') {
-      this.service.updateGroupMatchResult(matchId, score, match.awayScore, match.played);
-    } else {
-      this.service.updateGroupMatchResult(matchId, match.homeScore, score, match.played);
-    }
-  }
-
-  togglePlayed(match: GroupMatch): void {
-    this.service.updateGroupMatchResult(match.id, match.homeScore, match.awayScore, !match.played);
-  }
 }

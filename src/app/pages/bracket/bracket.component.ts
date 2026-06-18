@@ -19,7 +19,7 @@ interface KnockoutMatchVM extends KnockoutMatch {
       <span class="toolbar-spacer"></span>
       <nav class="flex-row">
         <a routerLink="/config" class="nav-link">Konfiguration</a>
-        <a routerLink="/groups" class="nav-link">Gruppenphase</a>
+        <a routerLink="/groups" class="nav-link">Gruppen</a>
         <a routerLink="/live" class="nav-link">Live Display</a>
       </nav>
     </mat-toolbar>
@@ -28,33 +28,25 @@ interface KnockoutMatchVM extends KnockoutMatch {
 
       @if (groups().length < 2) {
         <section class="section-card info-card">
-          <p>⚠️ Mindestens 2 Gruppen werden benötigt. Bitte zuerst die
-            <a routerLink="/groups" class="link">Gruppenphase</a> konfigurieren.
-          </p>
+          <p>⚠️ Mindestens 2 Gruppen werden benötigt für die K.O.-Runde.</p>
         </section>
       } @else {
-        <div class="flex-row actions-row">
-          <button type="button" class="btn-primary" (click)="generate()">
-            {{ knockoutMatches().length > 0 ? '🔄 Turnierplan aktualisieren' : '🏆 Turnierplan generieren' }}
-          </button>
-          <span class="hint-text">Generiert die K.O.-Runde basierend auf den aktuellen Gruppentabellen.</span>
-        </div>
 
         @if (knockoutMatches().length === 0) {
           <section class="section-card empty-bracket">
             <div class="trophy-big">🏆</div>
-            <p class="empty-hint">Noch kein Turnierplan generiert.</p>
+            <p class="empty-hint">Noch kein Turnierplan generiert. (Siehe Konfiguration)</p>
           </section>
         } @else {
-          <!-- Visual Bracket -->
+          <!-- Visual Bracket: Semifinal 1 -> Final <- Semifinal 2 -->
           <section class="section-card bracket-wrapper">
             <div class="bracket">
 
-              <!-- Semifinals Column -->
+              <!-- Left Semifinal -->
               <div class="round semifinals-round">
-                <div class="round-label">Halbfinale</div>
+                <div class="round-label">Halbfinale 1</div>
                 <div class="matches-col">
-                  @for (match of semifinals(); track match.id) {
+                  @for (match of semifinal1(); track match.id) {
                     <div class="match-card" [class.played]="match.played">
                       <div class="match-label">{{ match.label }}</div>
                       <div class="slot" [class.winner]="match.played && match.homeScore !== null && match.awayScore !== null && match.homeScore > match.awayScore">
@@ -72,22 +64,10 @@ interface KnockoutMatchVM extends KnockoutMatch {
                           <span class="score">{{ match.awayScore }}</span>
                         }
                       </div>
-                      @if (!match.played) {
-                        <div class="score-entry">
-                          <input type="number" min="0" class="score-input"
-                            [value]="match.homeScore ?? ''"
-                            (change)="onScore(match.id, 'home', $event)" placeholder="0" />
-                          <span class="entry-sep">:</span>
-                          <input type="number" min="0" class="score-input"
-                            [value]="match.awayScore ?? ''"
-                            (change)="onScore(match.id, 'away', $event)" placeholder="0" />
-                          <button type="button" class="confirm-btn" (click)="confirmResult(match)">✓</button>
-                        </div>
-                      } @else {
+                      @if (match.played) {
                         <div class="winner-row">
                           <span class="winner-label">Sieger:</span>
                           <span class="winner-name">{{ match.winnerName ?? '–' }}</span>
-                          <button type="button" class="edit-btn" (click)="editResult(match.id)">✎</button>
                         </div>
                       }
                     </div>
@@ -95,11 +75,11 @@ interface KnockoutMatchVM extends KnockoutMatch {
                 </div>
               </div>
 
-              <!-- Connector lines -->
+              <!-- Connector Lines Left -->
               <div class="connectors" aria-hidden="true">
-                <div class="connector-top"><div class="line-h"></div><div class="line-v"></div></div>
-                <div class="connector-mid"><div class="line-h-center"></div></div>
-                <div class="connector-bottom"><div class="line-v"></div><div class="line-h"></div></div>
+                <div class="connector-single">
+                   <div class="line-h-full"></div>
+                </div>
               </div>
 
               <!-- Final Column -->
@@ -123,26 +103,54 @@ interface KnockoutMatchVM extends KnockoutMatch {
                         <span class="score">{{ match.awayScore }}</span>
                       }
                     </div>
-                    @if (!match.played) {
-                      <div class="score-entry">
-                        <input type="number" min="0" class="score-input"
-                          [value]="match.homeScore ?? ''"
-                          (change)="onScore(match.id, 'home', $event)" placeholder="0" />
-                        <span class="entry-sep">:</span>
-                        <input type="number" min="0" class="score-input"
-                          [value]="match.awayScore ?? ''"
-                          (change)="onScore(match.id, 'away', $event)" placeholder="0" />
-                        <button type="button" class="confirm-btn" (click)="confirmResult(match)">✓</button>
-                      </div>
-                    } @else {
+                    @if (match.played) {
                       <div class="champion-row">
                         <span>🏆</span>
                         <span class="champion-name">{{ match.winnerName ?? '–' }}</span>
-                        <button type="button" class="edit-btn" (click)="editResult(match.id)">✎</button>
                       </div>
                     }
                   </div>
                 }
+              </div>
+
+              <!-- Connector Lines Right -->
+              <div class="connectors" aria-hidden="true">
+                <div class="connector-single">
+                   <div class="line-h-full"></div>
+                </div>
+              </div>
+
+              <!-- Right Semifinal -->
+              <div class="round semifinals-round">
+                <div class="round-label">Halbfinale 2</div>
+                <div class="matches-col">
+                  @for (match of semifinal2(); track match.id) {
+                    <div class="match-card" [class.played]="match.played">
+                      <div class="match-label">{{ match.label }}</div>
+                      <div class="slot" [class.winner]="match.played && match.homeScore !== null && match.awayScore !== null && match.homeScore > match.awayScore">
+                        <span class="slot-label">{{ match.homeSlotLabel }}</span>
+                        <span class="team-name">{{ match.homeTeamName }}</span>
+                        @if (match.played && match.homeScore !== null) {
+                          <span class="score">{{ match.homeScore }}</span>
+                        }
+                      </div>
+                      <div class="vs-divider">vs</div>
+                      <div class="slot" [class.winner]="match.played && match.homeScore !== null && match.awayScore !== null && match.awayScore > match.homeScore">
+                        <span class="slot-label">{{ match.awaySlotLabel }}</span>
+                        <span class="team-name">{{ match.awayTeamName }}</span>
+                        @if (match.played && match.awayScore !== null) {
+                          <span class="score">{{ match.awayScore }}</span>
+                        }
+                      </div>
+                      @if (match.played) {
+                        <div class="winner-row">
+                          <span class="winner-label">Sieger:</span>
+                          <span class="winner-name">{{ match.winnerName ?? '–' }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
               </div>
 
             </div>
@@ -269,19 +277,16 @@ interface KnockoutMatchVM extends KnockoutMatch {
     }
     .edit-btn:hover { border-color: #c9d1d9; color: #f0f6fc; }
 
-    /* Connectors */
+    /* Connectors updated for left -> center <- right layout */
     .connectors {
-      width: 60px; flex-shrink: 0;
+      width: 40px; flex-shrink: 0;
       display: flex; flex-direction: column;
-      align-self: stretch; padding-top: 26px;
+      align-self: stretch; justify-content: center;
     }
-    .connector-top, .connector-bottom { flex: 1; display: flex; flex-direction: column; }
-    .connector-top { justify-content: flex-end; }
-    .connector-bottom { justify-content: flex-start; }
-    .connector-mid { display: flex; align-items: center; }
-    .line-h { height: 2px; background: #484f58; width: 50%; align-self: center; margin-left: auto; }
-    .line-v { width: 2px; background: #484f58; flex: 1; margin-left: auto; }
-    .line-h-center { height: 2px; background: #484f58; width: 100%; }
+    .connector-single {
+      display: flex; align-items: center; width: 100%; height: 100%;
+    }
+    .line-h-full { height: 2px; background: #484f58; width: 100%; }
 
     /* Standings summary */
     .standings-grid {
@@ -334,6 +339,9 @@ export class BracketComponent {
   readonly semifinals = computed(() =>
     this.knockoutVMs().filter((m) => m.round === 'semifinal').sort((a, b) => a.position - b.position),
   );
+  readonly semifinal1 = computed(() => this.semifinals().filter((m) => m.position === 1));
+  readonly semifinal2 = computed(() => this.semifinals().filter((m) => m.position === 2));
+  
   readonly finals = computed(() => this.knockoutVMs().filter((m) => m.round === 'final'));
 
   readonly groupStandings = computed(() =>
