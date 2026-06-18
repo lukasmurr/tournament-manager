@@ -118,15 +118,15 @@ import { TournamentService } from '../../services/tournament.service';
     }
 
     .team-label {
-      font-size: clamp(0.75rem, 1.5vw, 1.1rem);
-      font-weight: 700;
+      font-size: clamp(1.2rem, 2.5vw, 2.2rem);
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.15em;
       color: #8b949e;
     }
 
     .team-name {
-      font-size: clamp(1.5rem, 4vw, 4rem);
+      font-size: clamp(1.5rem, 4vw, 3.5rem);
       font-weight: 900;
       color: #f0f6fc;
       text-align: center;
